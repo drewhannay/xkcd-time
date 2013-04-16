@@ -13,6 +13,12 @@ public class RepeatingAlarm extends BroadcastReceiver
 	@Override
 	public void onReceive(Context context, Intent intent)
 	{
+		if (intent.getAction() != null && intent.getAction().equals(Intent.ACTION_REBOOT))
+		{
+			MainActivity.scheduleAlarm(context);
+			return;
+		}
+
 		NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		Intent activityIntent = new Intent(context, MainActivity.class);
 

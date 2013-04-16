@@ -30,8 +30,15 @@
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" />
 
         <receiver
-            android:name="com.drewhannay.xkcdtime.RepeatingAlarm"
-            android:process=":remote" />
+            android:name="com.example.mealplanapp.RepeatingAlarm"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":remote"
+            android:permission="android.permission.REBOOT" >
+            <intent-filter>
+                <action android:name="android.intent.action.REBOOT" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

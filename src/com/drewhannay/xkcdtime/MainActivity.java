@@ -5,6 +5,7 @@ import java.util.Calendar;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -90,14 +91,14 @@ public class MainActivity extends Activity
 		super.onSaveInstanceState(outState);
 	}
 
-	private void scheduleAlarm()
+	public static void scheduleAlarm(Context context)
 	{
-		Intent intent = new Intent(this, RepeatingAlarm.class);
-		PendingIntent notificationIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+		Intent intent = new Intent(context, RepeatingAlarm.class);
+		PendingIntent notificationIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
 		long nextAlarmTime = getNextAlarmTime(Calendar.getInstance());
 
-		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+		AlarmManager am = (AlarmManager) context.getSystemService(ALARM_SERVICE);
 		am.setRepeating(AlarmManager.RTC_WAKEUP, nextAlarmTime, AlarmManager.INTERVAL_HALF_HOUR, notificationIntent);
 	}
 
@@ -112,7 +113,7 @@ public class MainActivity extends Activity
 		am.cancel(notificationIntent);
 	}
 
-	private long getNextAlarmTime(Calendar now)
+	private static long getNextAlarmTime(Calendar now)
 	{
 		int minutes = now.get(Calendar.MINUTE);
 		if (minutes >= 30)
@@ -139,7 +140,7 @@ public class MainActivity extends Activity
 			cancelAlarm();
 
 			if (isChecked)
-				scheduleAlarm();
+				scheduleAlarm(MainActivity.this);
 		}
 	};
 
