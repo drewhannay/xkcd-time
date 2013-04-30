@@ -11,15 +11,16 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 public class MainActivity extends Activity
@@ -32,10 +33,13 @@ public class MainActivity extends Activity
 
 		mProgressSpinner = (ProgressBar) findViewById(R.id.progress_spinner);
 		mTimeView = (ImageView) findViewById(R.id.time_view);
-		mNotifyCheckBox = (CheckBox) findViewById(R.id.notify_checkbox);
+		mNotifySpinner = (Spinner) findViewById(R.id.notify_spinner);
 
-		mNotifyCheckBox.setOnCheckedChangeListener(mCheckedChangeListener);
-		mNotifyCheckBox.setChecked(getPreferences(MODE_PRIVATE).getBoolean(NOTIFY_KEY, false));
+		mSpinnerAdapter = new XKCDSpinnerAdapter(this);
+		mNotifySpinner.setAdapter(mSpinnerAdapter);
+		mNotifySpinner.setOnItemSelectedListener(mSpinnerItemSelectedListener);
+		mNotifySpinner.setSelection(mSpinnerAdapter.getPositionForInterval(
+				PreferenceManager.getDefaultSharedPreferences(this).getLong(NOTIFY_INTERVAL_KEY, XKCDSpinnerAdapter.NEVER)));
 
 		TextView xkcdSite = (TextView) findViewById(R.id.xkcd_site_textview);
 		xkcdSite.setText(Html.fromHtml(getString(R.string.xkcd_site)));
@@ -93,54 +97,64 @@ public class MainActivity extends Activity
 
 	public static void scheduleAlarm(Context context)
 	{
+		long interval = PreferenceManager.getDefaultSharedPreferences(context).getLong(NOTIFY_INTERVAL_KEY, XKCDSpinnerAdapter.NEVER);
+		if (interval == XKCDSpinnerAdapter.NEVER)
+		{
+			cancelAlarm(context);
+			return;
+		}
+
 		Intent intent = new Intent(context, RepeatingAlarm.class);
 		PendingIntent notificationIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
 		long nextAlarmTime = getNextAlarmTime(Calendar.getInstance());
 
 		AlarmManager am = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-		am.setRepeating(AlarmManager.RTC_WAKEUP, nextAlarmTime, AlarmManager.INTERVAL_HALF_HOUR, notificationIntent);
+		am.setRepeating(AlarmManager.RTC_WAKEUP, nextAlarmTime, interval, notificationIntent);
 	}
 
-	private void cancelAlarm()
+	private static void cancelAlarm(Context context)
 	{
 		// Create the same intent, and thus a matching IntentSender, for the one that was scheduled...
-		Intent intent = new Intent(this, RepeatingAlarm.class);
-		PendingIntent notificationIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+		Intent intent = new Intent(context, RepeatingAlarm.class);
+		PendingIntent notificationIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
 		// ...and cancel the alarm
-		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+		AlarmManager am = (AlarmManager) context.getSystemService(ALARM_SERVICE);
 		am.cancel(notificationIntent);
 	}
 
 	private static long getNextAlarmTime(Calendar now)
 	{
 		int minutes = now.get(Calendar.MINUTE);
-		if (minutes >= 30)
+		if (minutes > 0)
 		{
 			now.set(Calendar.MINUTE, 0);
 			now.add(Calendar.HOUR, 1);
-		}
-		else
-		{
-			now.set(Calendar.MINUTE, 30);
 		}
 
 		return now.getTimeInMillis();
 	}
 
-	private final OnCheckedChangeListener mCheckedChangeListener = new OnCheckedChangeListener()
+	private final OnItemSelectedListener mSpinnerItemSelectedListener = new OnItemSelectedListener()
 	{
 		@Override
-		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+		public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
 		{
-			SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-			preferences.edit().putBoolean(NOTIFY_KEY, isChecked).commit();
+			long interval = mSpinnerAdapter.getIntervalForPosition(position);
 
-			cancelAlarm();
+			SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+			preferences.edit().putLong(NOTIFY_INTERVAL_KEY, interval).commit();
 
-			if (isChecked)
-				scheduleAlarm(MainActivity.this);
+			cancelAlarm(MainActivity.this);
+
+			if (interval != XKCDSpinnerAdapter.NEVER)
+				scheduleAlarm(MainActivity.this);			
+		}
+
+		@Override
+		public void onNothingSelected(AdapterView<?> parent)
+		{
 		}
 	};
 
@@ -177,11 +191,12 @@ public class MainActivity extends Activity
 
 	private static final String TIME_URL = "http://imgs.xkcd.com/comics/time.png";
 	private static final String BITMAP_KEY = "bitmap";
-	private static final String NOTIFY_KEY = "notify";
+	private static final String NOTIFY_INTERVAL_KEY = "notifyInterval";
 
+	private XKCDSpinnerAdapter mSpinnerAdapter;
 	private DownloadTimeTask mDownloadTimeTask;
 	private ProgressBar mProgressSpinner;
 	private ImageView mTimeView;
-	private CheckBox mNotifyCheckBox;
+	private Spinner mNotifySpinner;
 	private Bitmap mBitmap;
 }

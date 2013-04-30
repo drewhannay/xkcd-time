@@ -51,13 +51,21 @@
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textStyle="italic" />
 
-            <CheckBox
-                android:id="@+id/notify_checkbox"
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="10dp"
                 android:layout_marginTop="20dp"
                 android:text="@string/notify_me" />
+
+            <Spinner
+                android:id="@+id/notify_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:prompt="@string/notify_me"
+                android:layout_marginBottom="20dp" />
 
             <TextView
                 android:id="@+id/xkcd_site_textview"
@@ -87,5 +95,16 @@
                 tools:ignore="SelectableText" />
         </LinearLayout>
     </ScrollView>
+
+    <com.google.ads.AdView
+        android:id="@+id/adView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        ads:adSize="BANNER"
+        ads:adUnitId="a15155cbbef24b9"
+        ads:loadAdOnCreate="true"
+        ads:testDevices="TEST_EMULATOR" />
 
 </RelativeLayout>

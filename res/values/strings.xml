@@ -5,7 +5,7 @@
     <string name="time">Time</string>
     <string name="wait_for_it">Wait for it.</string>
     <string name="time_png">Time.png</string>
-    <string name="notify_me">Notify me every half hour as Time passes</string>
+    <string name="notify_me">Notify me:</string>
     <string name="notif_title">New Time frame available!</string>
     <string name="notif_content">View the new image</string>
     <string name="xkcd_site"><![CDATA[<a href="http://xkcd.com">XKCD.com</a>]]></string>
